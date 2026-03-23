@@ -1,5 +1,75 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>DarkChat</title>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DarkChat</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d0f14;color:#a78bfa;font-family:Arial,sans-serif;
+display:flex;align-items:center;justify-content:center;
+min-height:100vh;flex-direction:column;gap:20px}
+.logo{font-size:2.5rem;font-weight:bold}
+.sub{color:#6b7585;font-size:.9rem}
+.spinner{width:36px;height:36px;border:3px solid #2a1f3d;
+border-top-color:#a78bfa;border-radius:50%;
+animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err{color:#e05a5a;font-size:.85rem;text-align:center;max-width:300px}
+.btn{background:#7c3aed;color:white;border:none;padding:12px 28px;
+border-radius:12px;font-size:1rem;cursor:pointer;text-decoration:none;
+display:none}
+</style>
+</head>
+<body>
+<div class="logo">🌑 DarkChat</div>
+<div class="sub" id="status">Подключение...</div>
+<div class="spinner" id="spin"></div>
+<div class="err" id="err"></div>
+<a class="btn" id="btn" href="#">Открыть вручную</a>
+
 <script>
-const U="https://predivinable-unturbidly-kym.ngrok-free.dev";
-fetch(U,{headers:{"ngrok-skip-browser-warning":"1"}}).finally(()=>{location.href=U+"/chat"});
-</script></head><body style="background:#0d0f14"></body></html>
+const NGROK = "https://predivinable-unturbidly-kym.ngrok-free.dev";
+
+async function connect() {
+  const status = document.getElementById('status');
+  const spin   = document.getElementById('spin');
+  const err    = document.getElementById('err');
+  const btn    = document.getElementById('btn');
+
+  try {
+    status.textContent = "Соединение с сервером...";
+
+    // Делаем preflight запрос с заголовком чтобы ngrok запомнил браузер
+    const resp = await fetch(NGROK + "/", {
+      method: "GET",
+      headers: {
+        "ngrok-skip-browser-warning": "1",
+        "X-Requested-With": "XMLHttpRequest"
+      },
+      mode: "cors",
+      credentials: "include"
+    });
+
+    if (resp.ok || resp.status === 302 || resp.status === 204) {
+      status.textContent = "Переход в чат...";
+      spin.style.display = "none";
+      // Небольшая задержка чтобы ngrok запомнил
+      await new Promise(r => setTimeout(r, 500));
+      window.location.href = NGROK + "/chat";
+    } else {
+      throw new Error("Сервер недоступен");
+    }
+  } catch(e) {
+    spin.style.display = "none";
+    status.textContent = "Не удалось подключиться";
+    err.textContent = "Сервер временно недоступен. Нажмите кнопку ниже.";
+    btn.href = NGROK + "/chat";
+    btn.style.display = "inline-block";
+  }
+}
+
+connect();
+</script>
+</body>
+</html>
